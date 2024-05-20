@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from utils import remove_external, remove_hash, get_href_value
 
 
 def get_soup(url):
@@ -10,6 +11,8 @@ def main(url):
     print("The program is running...")
     soup = get_soup(url)
     anchor_tags = soup.find_all("a", href=True)
+    # Extract and the filter href values
+    hrefs = remove_external(remove_hash(get_href_value(anchor_tags)), url)
 
 
 if __name__ == '__main__':
