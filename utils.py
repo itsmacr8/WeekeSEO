@@ -1,4 +1,5 @@
 from urllib.parse import urlparse
+import csv
 
 
 def get_href_value(anchor_tags):
@@ -24,3 +25,12 @@ def extract_filename_from_url(url):
     parsed_url = urlparse(url)
     netloc_parts = parsed_url.netloc.split(".")
     return netloc_parts[-2] if len(netloc_parts) >= 2 else netloc_parts[-1]
+
+
+def create_csv_file_with_header(file_name):
+    try:
+        with open(f"{file_name}.csv", mode="w", newline="", encoding="utf-8") as file:
+            writer = csv.writer(file)
+            writer.writerow(["SL No", "Links", "Title Tag", "Meta Description"])
+    except Exception as e:
+        print(f"An error occurred: {e}")
