@@ -34,3 +34,22 @@ def create_csv_file_with_header(file_name):
             writer.writerow(["SL No", "Links", "Title Tag", "Meta Description"])
     except Exception as e:
         print(f"An error occurred: {e}")
+
+
+def write_row(file, data):
+    writer = csv.writer(file)
+    sl = data["serial_number"]
+    link = data["webpage_link"]
+    title = data["webpage_title"]
+    description = data["webpage_description"]
+    writer.writerow([sl, link, title, description])
+
+
+def write_to_csv(data):
+    try:
+        with open(
+            f'{data["file_name"]}.csv', mode="a", newline="", encoding="utf-8"
+        ) as file:
+            write_row(file, data)
+    except Exception as e:
+        print(f"An error occurred: {e}")
