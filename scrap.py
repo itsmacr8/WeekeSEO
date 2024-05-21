@@ -39,6 +39,23 @@ def add_homepage_to_csv(soup, file_name, url):
     write_to_csv(data)
 
 
+def add_all_webpages_to_csv(file_name, links):
+    serial_number = 2
+    for link in links:
+        soup = get_soup(link)
+        webpage_title = get_webpage_title(soup)
+        webpage_description = get_webpage_description(soup)
+        data = {
+            "file_name": file_name,
+            "serial_number": serial_number,
+            "webpage_link": link,
+            "webpage_title": webpage_title,
+            "webpage_description": webpage_description,
+        }
+        write_to_csv(data)
+        serial_number += 1
+
+
 def main(url):
     print("The program is running...")
     soup = get_soup(url)
@@ -49,6 +66,7 @@ def main(url):
     file_name = extract_filename_from_url(url)
     create_csv_file_with_header(file_name)
     add_homepage_to_csv(soup, file_name, url)
+    add_all_webpages_to_csv(file_name, full_links)
 
 
 if __name__ == '__main__':
