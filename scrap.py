@@ -77,20 +77,36 @@ def remove_duplicates(hrefs):
     return set(hrefs)
 
 
+def get_anchor_tags(soup):
+    return soup.find_all("a", href=True)
+
+
+def scrap_pages(full_links, unique_hrefs):
+    for link in full_links:
+        unique_hrefs.extend(scrap_each_page(link))
+    return get_full_links(remove_homepage(remove_duplicates(unique_hrefs)), url)
+
+
+def scrap_each_page(url):
+    soup = get_soup(url)
+    anchor_tags = get_anchor_tags(soup)
+    return remove_external(remove_hash(get_href_value(anchor_tags)), url)
+
+
 def main(url):
     print("The program is running...")
     soup = get_soup(url)
-    anchor_tags = soup.find_all("a", href=True)
+    anchor_tags = get_anchor_tags(soup)
     # Extract and the filter href values
     hrefs = remove_external(remove_hash(get_href_value(anchor_tags)), url)
     # convert the list to set for unique values and then back to list to maintain order
     unique_hrefs = remove_homepage(remove_duplicates(hrefs))
     full_links = get_full_links(unique_hrefs, url)
+    website_all_links = scrap_pages(full_links, unique_hrefs)
     file_name = extract_filename_from_url(url)
     create_csv_file_with_header(file_name)
     add_homepage_to_csv(soup, file_name, url)
-    add_all_webpages_to_csv(file_name, full_links)
-
+    add_all_webpages_to_csv(file_name, website_all_links)
 
 if __name__ == '__main__':
     url = input('Enter the website URL: ')
