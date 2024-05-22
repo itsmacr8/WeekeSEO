@@ -56,13 +56,36 @@ def add_all_webpages_to_csv(file_name, links):
         serial_number += 1
 
 
+def remove_homepage(hrefs):
+    """We use set because of performance"""
+    homepage_variations = {
+        '/',
+        './',
+        './index.php',
+        './index.html',
+        './index.htm',
+        'index.php',
+        'index.html',
+        'index.htm',
+        url,
+        f'{url}/'
+    }
+    return [href for href in hrefs if href not in homepage_variations]
+
+
+def remove_duplicates(hrefs):
+    return set(hrefs)
+
+
 def main(url):
     print("The program is running...")
     soup = get_soup(url)
     anchor_tags = soup.find_all("a", href=True)
     # Extract and the filter href values
     hrefs = remove_external(remove_hash(get_href_value(anchor_tags)), url)
-    full_links = get_full_links(hrefs, url)
+    # convert the list to set for unique values and then back to list to maintain order
+    unique_hrefs = remove_homepage(remove_duplicates(hrefs))
+    full_links = get_full_links(unique_hrefs, url)
     file_name = extract_filename_from_url(url)
     create_csv_file_with_header(file_name)
     add_homepage_to_csv(soup, file_name, url)
