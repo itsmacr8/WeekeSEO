@@ -11,8 +11,8 @@ from utils import (
 )
 
 
-def get_soup(url):
-    response = requests.get(url)
+def get_soup(user_provided_url):
+    response = requests.get(user_provided_url)
     return BeautifulSoup(response.text, "html.parser")
 
 
@@ -28,11 +28,12 @@ def get_webpage_title(soup):
     return title_tag.string if title_tag else "No title found"
 
 
-def add_homepage_to_csv(soup, file_name, url):
+def add_homepage_to_csv(file_name, user_provided_url):
+    soup = get_soup(user_provided_url)
     data = {
         "file_name": file_name,
         "serial_number": 1,
-        "webpage_link": url,
+        "webpage_link": user_provided_url,
         "webpage_title": get_webpage_title(soup),
         "webpage_description": get_webpage_description(soup),
     }
@@ -67,47 +68,47 @@ def remove_homepage(hrefs):
         'index.php',
         'index.html',
         'index.htm',
-        url,
-        f'{url}/'
+        user_provided_url,
+        f'{user_provided_url}/'
     }
-    return [href for href in hrefs if href not in homepage_variations]
-
-
-def remove_duplicates(hrefs):
-    return set(hrefs)
+    hrefs -= homepage_variations
+    return hrefs
 
 
 def get_anchor_tags(soup):
     return soup.find_all("a", href=True)
 
 
-def scrap_pages(full_links, unique_hrefs):
+def scrap_pages(full_links, hrefs):
+    """
+    * Scrap all pages of the website
+    * Merge the relative href value create absolute link with the user provided base link
+    """
     for link in full_links:
-        unique_hrefs.extend(scrap_each_page(link))
-    return get_full_links(remove_homepage(remove_duplicates(unique_hrefs)), url)
+        hrefs.update(get_provided_website_href_only(link))
+    return get_full_links(hrefs, user_provided_url)
 
 
-def scrap_each_page(url):
-    soup = get_soup(url)
-    anchor_tags = get_anchor_tags(soup)
-    return remove_external(remove_hash(get_href_value(anchor_tags)), url)
+def get_provided_website_href_only(user_provided_url):
+    """ Returns href values set
+    * Scrap page and collect all anchor tags href value
+    * Remove hashed href, external href, and homepage variations href value
+    """
+    href_value = get_href_value(get_anchor_tags(get_soup(user_provided_url)))
+    return remove_homepage(remove_external(remove_hash(href_value), user_provided_url))
 
 
-def main(url):
+def main(user_provided_url):
     print("The program is running...")
-    soup = get_soup(url)
-    anchor_tags = get_anchor_tags(soup)
-    # Extract and the filter href values
-    hrefs = remove_external(remove_hash(get_href_value(anchor_tags)), url)
-    # convert the list to set for unique values and then back to list to maintain order
-    unique_hrefs = remove_homepage(remove_duplicates(hrefs))
-    full_links = get_full_links(unique_hrefs, url)
-    website_all_links = scrap_pages(full_links, unique_hrefs)
-    file_name = extract_filename_from_url(url)
+    hrefs = set()
+    hrefs.update(get_provided_website_href_only(user_provided_url))
+    full_links = get_full_links(hrefs, user_provided_url)
+    website_all_links = scrap_pages(full_links, hrefs)
+    file_name = extract_filename_from_url(user_provided_url)
     create_csv_file_with_header(file_name)
-    add_homepage_to_csv(soup, file_name, url)
+    add_homepage_to_csv(file_name, user_provided_url)
     add_all_webpages_to_csv(file_name, website_all_links)
 
 if __name__ == '__main__':
-    url = input('Enter the website URL: ')
-    main(url)
+    user_provided_url = input('Enter the website user_provided_URL: ')
+    main(user_provided_url)
