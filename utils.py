@@ -5,20 +5,42 @@ import csv
 def get_href_value(anchor_tags):
     return {anchor_tag["href"] for anchor_tag in anchor_tags}
 
-def remove_hash(hrefs):
+def remove_hash(slugs):
     """Internal links with '#' in the links
     * '#service' not '/services'
     * '/blogs#blog-1' not '/blogs'
     """
-    return {href for href in hrefs if "#" not in href}
+    return {slug for slug in slugs if "#" not in slug}
 
-def remove_external(hrefs, url):
-    return {href for href in hrefs if href.startswith(url) or href.startswith("/")}
+def remove_external(slugs, url):
+    return {slug for slug in slugs if slug.startswith(url) or slug.startswith("/")}
 
-def get_full_links(hrefs, url):
-    """ If the href starts with absolute url then continue or if it starts with
-    relative href then add url+href to make it absolute."""
-    return [f"{url}{href}" if not href.startswith("http") else href for href in hrefs]
+
+def remove_homepage(slugs, url):
+    homepage_variations = {
+        "/",
+        "./",
+        "./index.php",
+        "./index.html",
+        "./index.htm",
+        "index.php",
+        "index.html",
+        "index.htm",
+        url,
+        f"{url}/",
+    }
+    slugs -= homepage_variations
+    return slugs
+
+
+def get_merge_links(slugs, url):
+    """If the slug starts with absolute url then continue or if it starts with
+    relative slug then add url+slug to make it absolute. For example
+    * url/blog/ then keep it as it is.
+    * /blog/ then make it like url/blog/
+    """
+    return [f"{url}{slug}" if not slug.startswith("http") else slug for slug in slugs]
+
 
 def extract_filename_from_url(url):
     """ Extract the domain name from the url to use it as filename """

@@ -4,15 +4,18 @@ from utils import (
     remove_external,
     remove_hash,
     get_href_value,
-    get_full_links,
+    get_merge_links,
     extract_filename_from_url,
     create_csv_file_with_header,
     write_to_csv,
+    remove_homepage,
 )
 
+filtered_slugs = set()
 
-def get_soup(user_provided_url):
-    response = requests.get(user_provided_url)
+
+def get_soup(base_url):
+    response = requests.get(base_url)
     return BeautifulSoup(response.text, "html.parser")
 
 
@@ -28,12 +31,12 @@ def get_webpage_title(soup):
     return title_tag.string if title_tag else "No title found"
 
 
-def add_homepage_to_csv(file_name, user_provided_url):
-    soup = get_soup(user_provided_url)
+def add_homepage_to_csv(file_name, base_url):
+    soup = get_soup(base_url)
     data = {
         "file_name": file_name,
         "serial_number": 1,
-        "webpage_link": user_provided_url,
+        "webpage_link": base_url,
         "webpage_title": get_webpage_title(soup),
         "webpage_description": get_webpage_description(soup),
     }
@@ -57,58 +60,45 @@ def add_all_webpages_to_csv(file_name, links):
         serial_number += 1
 
 
-def remove_homepage(hrefs):
-    """We use set because of performance"""
-    homepage_variations = {
-        '/',
-        './',
-        './index.php',
-        './index.html',
-        './index.htm',
-        'index.php',
-        'index.html',
-        'index.htm',
-        user_provided_url,
-        f'{user_provided_url}/'
-    }
-    hrefs -= homepage_variations
-    return hrefs
-
-
 def get_anchor_tags(soup):
     return soup.find_all("a", href=True)
 
 
-def scrap_pages(full_links, hrefs):
+def scrap_pages(full_links):
     """
     * Scrap all pages of the website
-    * Merge the relative href value create absolute link with the user provided base link
+    * Merge the relative slug value create absolute link with the user provided base link
     """
     for link in full_links:
-        hrefs.update(get_provided_website_href_only(link))
-    return get_full_links(hrefs, user_provided_url)
+        update_filtered_slugs_set(link)
+    return get_merge_links(filtered_slugs, base_url)
 
 
-def get_provided_website_href_only(user_provided_url):
-    """ Returns href values set
-    * Scrap page and collect all anchor tags href value
-    * Remove hashed href, external href, and homepage variations href value
+def update_filtered_slugs_set(link):
+    """Get a set and add those new set items to the set"""
+    filtered_slugs.update(get_provided_website_slug_only(link))
+
+
+def get_provided_website_slug_only(base_url):
+    """ Returns slug values set
+    * Scrap page and collect all anchor tags slug value
+    * Remove hashed slug, external slug, and homepage variations slug value
     """
-    href_value = get_href_value(get_anchor_tags(get_soup(user_provided_url)))
-    return remove_homepage(remove_external(remove_hash(href_value), user_provided_url))
+    slugs = get_href_value(get_anchor_tags(get_soup(base_url)))
+    return remove_homepage(remove_external(remove_hash(slugs), base_url), base_url)
 
 
-def main(user_provided_url):
+def main(base_url):
     print("The program is running...")
-    hrefs = set()
-    hrefs.update(get_provided_website_href_only(user_provided_url))
-    full_links = get_full_links(hrefs, user_provided_url)
-    website_all_links = scrap_pages(full_links, hrefs)
-    file_name = extract_filename_from_url(user_provided_url)
+    update_filtered_slugs_set(base_url)
+    homepage_all_links = get_merge_links(filtered_slugs, base_url)
+    website_all_links = scrap_pages(homepage_all_links)
+    file_name = extract_filename_from_url(base_url)
     create_csv_file_with_header(file_name)
-    add_homepage_to_csv(file_name, user_provided_url)
+    add_homepage_to_csv(file_name, base_url)
     add_all_webpages_to_csv(file_name, website_all_links)
 
+
 if __name__ == '__main__':
-    user_provided_url = input('Enter the website user_provided_URL: ')
-    main(user_provided_url)
+    base_url = input('Enter the website base_url: ')
+    main(base_url)
