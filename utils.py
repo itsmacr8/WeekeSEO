@@ -1,5 +1,6 @@
 from urllib.parse import urlparse
 import csv
+from math import ceil
 
 
 def get_href_value(anchor_tags):
@@ -75,3 +76,9 @@ def write_to_csv(data):
             write_row(file, data)
     except Exception as e:
         print(f"An error occurred: {e}")
+
+def show_progress(total_num, num):
+    increment = ceil(total_num / 10)
+    if num % increment == 0:
+        progress_percentage = int(ceil((num / total_num) * 100 / 10) * 10)
+        print(f"Progress: {progress_percentage}%")

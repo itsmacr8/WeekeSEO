@@ -9,6 +9,7 @@ from utils import (
     create_csv_file_with_header,
     write_to_csv,
     remove_homepage,
+    show_progress
 )
 
 filtered_slugs = set()
@@ -44,6 +45,7 @@ def add_homepage_to_csv(file_name, base_url):
 
 
 def add_all_webpages_to_csv(file_name, links):
+    total_links = len(links)
     serial_number = 2
     for link in links:
         soup = get_soup(link)
@@ -57,6 +59,7 @@ def add_all_webpages_to_csv(file_name, links):
             "webpage_description": webpage_description,
         }
         write_to_csv(data)
+        show_progress(total_links, serial_number)
         serial_number += 1
 
 
@@ -92,11 +95,13 @@ def main(base_url):
     print("The program is running...")
     update_filtered_slugs_set(base_url)
     homepage_all_links = get_merge_links(filtered_slugs, base_url)
-    website_all_links = scrap_pages(homepage_all_links)
     file_name = extract_filename_from_url(base_url)
     create_csv_file_with_header(file_name)
     add_homepage_to_csv(file_name, base_url)
+    website_all_links = scrap_pages(homepage_all_links)
+    print(f"Progress: 10%")
     add_all_webpages_to_csv(file_name, website_all_links)
+    print(f'Completed! Report file has been created. The file name is {file_name}')
 
 
 if __name__ == '__main__':
