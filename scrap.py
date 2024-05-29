@@ -107,5 +107,5 @@ def main(base_url):
 
 
 if __name__ == '__main__':
-    base_url = input('Enter the website base_url: ')
+    base_url = input('Enter the website base_url: ').strip().rstrip('/')
     main(base_url)
