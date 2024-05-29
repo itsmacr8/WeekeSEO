@@ -12,11 +12,13 @@ from utils import (
     show_progress
 )
 
+
+HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:127.0) Gecko/20100101 Firefox/127.0'}
 filtered_slugs = set()
 
 
 def get_soup(base_url):
-    response = requests.get(base_url)
+    response = requests.get(base_url, headers=HEADERS)
     return BeautifulSoup(response.text, "html.parser")
 
 
